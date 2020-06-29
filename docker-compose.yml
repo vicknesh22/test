@@ -1,6 +1,93 @@
-version: '3'
-
+version: '3.3'
 services:
-  whoami:
-    image: "containous/whoami"
-    container_name: "simple-service"
+  busybox:
+    image: python
+    networks:
+      - public
+    volumes:
+      - /root/iamunited:/home/devops
+    tty: true
+    stdin_open: true 
+    deploy:
+       placement:
+         constraints:
+           - node.role == manager
+  elastic1: 
+    image: elastic:latest
+    # container_name: elastic1
+    #    environment:
+            #- ES_HEAP_SIZE="1g -Des.cluster.name=avatar -Des.script.groovy.sandbox.enabled=true"
+    volumes:
+      - elastic1data:/usr/share/elasticsearch/data
+    networks:
+      - public
+  mysql:
+    image: mysql
+    networks:
+      - public
+    environment:
+       MYSQL_ROOT_PASSWORD: admin
+    volumes: 
+      - sqldata:/var/lib/mysql
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+  redis:
+    image: tommy351/redis-cluster:3.2
+    networks:
+      - public
+    environment:
+      CLUSTER_ANNOUNCE_IP: 10.160.15.196
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+  mongo:
+    image: repository.nobroker.in:9093/mongo:latest
+    #restart: always
+    volumes: 
+      - mongodata:/data/db
+    networks:
+      - public
+  kafka:
+    image: spotify/kafka
+    networks:
+      - public
+    environment:
+      ADVERTISED_HOST: 10.160.15.196
+      ADVERTISED_PORT: 9092
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+  test:
+    image: containous/whoami
+    environment: 
+      PROFILE: blackbox
+      env: local   
+    tty: true  
+    stdin_open: true 
+    networks:
+      - public
+    deploy:    
+      labels:
+        - traefik.frontend.rule=Host:blackbox.${DOMAIN}
+        - traefik.enable=true
+        - traefik.port=9999
+        - traefik.docker.network=public
+        - traefik.redirectorservice.frontend.entryPoints=http
+        - traefik.redirectorservice.frontend.redirect.entryPoint=https
+        - traefik.webservice.frontend.entryPoints=https
+networks:
+  public:
+    external: true
+volumes:
+  elastic1data:
+    driver: local
+  elastic5data:
+    driver: local
+  mongodata:
+    driver: local
+  sqldata:
+    driver: localvice"
