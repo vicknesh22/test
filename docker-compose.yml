@@ -3,7 +3,7 @@ services:
   busybox:
     image: python
     networks:
-      - internal
+      - public
     volumes:
       - /root/iamunited:/home/devops
     tty: true
@@ -20,11 +20,11 @@ services:
     volumes:
       - elastic1data:/usr/share/elasticsearch/data
     networks:
-      - internal
+      - public
   mysql:
     image: mysql
     networks:
-      - internal
+      - public
     environment:
        MYSQL_ROOT_PASSWORD: admin
     volumes: 
@@ -36,7 +36,7 @@ services:
   redis:
     image: tommy351/redis-cluster:3.2
     networks:
-      - internal
+      - public
     environment:
       CLUSTER_ANNOUNCE_IP: 10.160.15.196
     deploy:
@@ -49,11 +49,11 @@ services:
     volumes: 
       - mongodata:/data/db
     networks:
-      - internal
+      - public
   kafka:
     image: spotify/kafka
     networks:
-      - initernal
+      - public
     environment:
       ADVERTISED_HOST: 10.160.15.196
       ADVERTISED_PORT: 9092
@@ -69,16 +69,19 @@ services:
     tty: true  
     stdin_open: true 
     networks:
-      - internal
+      - public
     deploy:    
       labels:
         - traefik.frontend.rule=Host:blackbox.${DOMAIN}
         - traefik.enable=true
         - traefik.port=9999
-        - traefik.docker.network=internal
+        - traefik.docker.network=public
         - traefik.redirectorservice.frontend.entryPoints=http
         - traefik.redirectorservice.frontend.redirect.entryPoint=https
         - traefik.webservice.frontend.entryPoints=https
+networks:
+  public:
+    external: true
 volumes:
   elastic1data:
     driver: local
